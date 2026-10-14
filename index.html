@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Murugan M | 3D Portfolio</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+  
+  <!-- Three.js CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+  <style>
+    :root {
+      --bg: #07090e;
+      --card-bg: rgba(18, 22, 34, 0.65);
+      --card-border: rgba(255, 255, 255, 0.08);
+      --accent-cyan: #00f2fe;
+      --accent-purple: #9b51e0;
+      --text-main: #f0f4f8;
+      --text-muted: #94a3b8;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      scroll-behavior: smooth;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text-main);
+      font-family: 'Montserrat', sans-serif;
+      overflow-x: hidden;
+      line-height: 1.6;
+    }
+
+    /* 3D Canvas fixed in background */
+    #canvas3d {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    /* Layout & Navigation */
+    header {
+      position: fixed;
+      top: 0;
+      width: 100%;
+      padding: 1.2rem 4rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(7, 9, 14, 0.7);
+      backdrop-filter: blur(12px);
+      z-index: 100;
+      border-bottom: 1px solid var(--card-border);
+    }
+
+    .brand {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 1.4rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    nav a {
+      color: var(--text-muted);
+      text-decoration: none;
+      margin-left: 2rem;
+      font-size: 0.95rem;
+      font-weight: 500;
+      transition: color 0.3s ease;
+    }
+
+    nav a:hover {
+      color: var(--accent-cyan);
+    }
+
+    main {
+      position: relative;
+      z-index: 1;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 2rem;
+    }
+
+    section {
+      padding: 6rem 0;
+      min-height: 80vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    /* Hero Section */
+    #hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: flex-start;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 0.35rem 1rem;
+      background: rgba(0, 242, 254, 0.1);
+      border: 1px solid rgba(0, 242, 254, 0.3);
+      border-radius: 50px;
+      color: var(--accent-cyan);
+      font-size: 0.85rem;
+      margin-bottom: 1.5rem;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+
+    h1 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 4rem;
+      line-height: 1.1;
+      margin-bottom: 1.2rem;
+      font-weight: 800;
+    }
+
+    .subtitle {
+      font-size: 1.25rem;
+      color: var(--text-muted);
+      max-width: 600px;
+      margin-bottom: 2.5rem;
+    }
+
+    .btn-group {
+      display: flex;
+      gap: 1.2rem;
+    }
+
+    .btn {
+      padding: 0.85rem 2rem;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.95rem;
+      text-decoration: none;
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent-cyan), #00a8ff);
+      color: #04101e;
+      box-shadow: 0 4px 20px rgba(0, 242, 254, 0.3);
+    }
+
+    .btn-primary:hover {
+      box-shadow: 0 6px 28px rgba(0, 242, 254, 0.5);
+      transform: translateY(-2px);
+    }
+
+    .btn-outline {
+      border: 1px solid var(--card-border);
+      color: var(--text-main);
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .btn-outline:hover {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    /* Section Headers */
+    .section-title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 2.2rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .section-desc {
+      color: var(--text-muted);
+      margin-bottom: 3rem;
+    }
+
+    /* Cards & Grids */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 1.8rem;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
+      padding: 2rem;
+      backdrop-filter: blur(16px);
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 3px;
+      background: linear-gradient(90deg, var(--accent-cyan), var(--accent-purple));
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-6px);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .card:hover::before {
+      opacity: 1;
+    }
+
+    .card h3 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 1.3rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .card .meta {
+      font-size: 0.85rem;
+      color: var(--accent-cyan);
+      margin-bottom: 1rem;
+      font-weight: 600;
+    }
+
+    .card p {
+      font-size: 0.95rem;
+      color: var(--text-muted);
+    }
+
+    /* Skill Tags */
+    .tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+      margin-top: 1rem;
+    }
+
+    .tag {
+      font-size: 0.78rem;
+      padding: 0.3rem 0.75rem;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--card-border);
+      border-radius: 6px;
+      color: var(--text-muted);
+    }
+
+    /* Contact Details */
+    .contact-container {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 3rem;
+      backdrop-filter: blur(16px);
+      max-width: 700px;
+    }
+
+    .contact-item {
+      display: flex;
+      align-items: center;
+      margin-bottom: 1.2rem;
+      font-size: 1.05rem;
+    }
+
+    .contact-item span {
+      color: var(--accent-cyan);
+      margin-right: 1rem;
+      font-weight: 700;
+      width: 80px;
+    }
+
+    footer {
+      text-align: center;
+      padding: 3rem 0;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      border-top: 1px solid var(--card-border);
+      z-index: 1;
+      position: relative;
+    }
+
+    @media (max-width: 768px) {
+      header {
+        padding: 1.2rem 1.5rem;
+      }
+      nav {
+        display: none;
+      }
+      h1 {
+        font-size: 2.8rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Three.js Canvas -->
+  <canvas id="canvas3d"></canvas>
+
+  <header>
+    <div class="brand">MURUGAN M.</div>
+    <nav>
+      <a href="#about">About</a>
+      <a href="#experience">Experience</a>
+      <a href="#projects">Projects</a>
+      <a href="#skills">Skills</a>
+      <a href="#contact">Contact</a>
+    </nav>
+  </header>
+
+  <main>
+    <!-- Hero -->
+    <section id="hero">
+      <div class="badge">AI DESIGNER &amp; SOFTWARE ANALYST</div>
+      <h1>Bridging Code,<br>Design &amp; AI Systems.</h1>
+      <p class="subtitle">
+        Software Analyst passionate about building accessible digital banking interfaces, 
+        modern UI/UX systems, and AI-driven creative assets.
+      </p>
+      <div class="btn-group">
+        <a href="#projects" class="btn btn-primary">Explore Work</a>
+        <a href="#contact" class="btn btn-outline">Contact Me</a>
+      </div>
+    </section>
+
+    <!-- Experience -->
+    <section id="experience">
+      <h2 class="section-title">Work Experience</h2>
+      <p class="section-desc">Practical experience across low-code banking engines, design systems, and AI collateral.</p>
+      
+      <div class="grid">
+        <div class="card">
+          <div class="meta">May 2026 – Present</div>
+          <h3>AI Designer</h3>
+          <p style="margin-bottom: 0.5rem; color: #fff;">SA Smart Solution &bull; Trivandrum</p>
+          <p>Developing AI posters, UI branding concepts, graphic collateral, content creation, and social media campaigns.</p>
+        </div>
+
+        <div class="card">
+          <div class="meta">Mar 2024 – Apr 2026</div>
+          <h3>Web Developer &amp; UI/UX</h3>
+          <p style="margin-bottom: 0.5rem; color: #fff;">MK Solutions &bull; Tirunelveli</p>
+          <p>Architected responsive web platforms, clean UI prototypes, identity logos, and backend SQL configurations.</p>
+        </div>
+
+        <div class="card">
+          <div class="meta">May 2023 – Jan 2024</div>
+          <h3>Software Analyst</h3>
+          <p style="margin-bottom: 0.5rem; color: #fff;">ClaySys Technologies &bull; Cochin</p>
+          <p>Created low-code enterprise applications, engineered business logic, and elevated web accessibility for visually impaired users.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Projects -->
+    <section id="projects">
+      <h2 class="section-title">Featured Projects</h2>
+      <p class="section-desc">Key web and banking applications built for client usability and scalability.</p>
+      
+      <div class="grid">
+        <div class="card">
+          <div class="meta">Accessibility &bull; Low-Code</div>
+          <h3>Altra Digital Banking</h3>
+          <p>Engineered an accessible low-code banking interface optimized for blind and screen-reader users.</p>
+          <div class="tags">
+            <span class="tag">AppForms</span>
+            <span class="tag">Accessibility</span>
+            <span class="tag">SQL</span>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="meta">FinTech &bull; UI/UX</div>
+          <h3>First Florida CUNextgen</h3>
+          <p>Designed core credit union banking application modules, streamlining account flows and database queries.</p>
+          <div class="tags">
+            <span class="tag">UI/UX</span>
+            <span class="tag">Appforms</span>
+            <span class="tag">Stored Procedures</span>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="meta">Enterprise Web</div>
+          <h3>Municipal Credit Union</h3>
+          <p>Built secure digital account-opening modules alongside payment routing systems.</p>
+          <div class="tags">
+            <span class="tag">JavaScript</span>
+            <span class="tag">SQL</span>
+            <span class="tag">Figma</span>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="meta">Financial Tools</div>
+          <h3>MCU Lending Process</h3>
+          <p>Developed donation-based application workflows and automated financial analytics reporting tools.</p>
+          <div class="tags">
+            <span class="tag">Figma</span>
+            <span class="tag">Graphic Design</span>
+            <span class="tag">Analytics</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Skills & Tech -->
+    <section id="skills">
+      <h2 class="section-title">Technical Toolset</h2>
+      <p class="section-desc">Technologies and tools used to bring interfaces from concept to production.</p>
+      
+      <div class="grid">
+        <div class="card">
+          <h3>UI/UX &amp; Creative</h3>
+          <p>Figma, Adobe XD, Photoshop, CapCut, Canvas layout systems, Branding typography.</p>
+        </div>
+        <div class="card">
+          <h3>Frontend &amp; Development</h3>
+          <p>HTML5, CSS3, JavaScript, jQuery, Python, Django, C, C++, Appforms.</p>
+        </div>
+        <div class="card">
+          <h3>Cloud &amp; Databases</h3>
+          <p>Microsoft Azure, AWS, SQL Server, Stored Procedures, Relational Database Design.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Contact -->
+    <section id="contact">
+      <h2 class="section-title">Get in Touch</h2>
+      <p class="section-desc">Available for freelance UI/UX projects, web development, and engineering roles.</p>
+      
+      <div class="contact-container">
+        <div class="contact-item">
+          <span>Email</span>
+          <a href="mailto:mkmurugan20@gmail.com" style="color: var(--text-main); text-decoration: none;">mkmurugan20@gmail.com</a>
+        </div>
+        <div class="contact-item">
+          <span>Phone</span>
+          <a href="tel:+917904263904" style="color: var(--text-main); text-decoration: none;">+91 7904263904</a>
+        </div>
+        <div class="contact-item">
+          <span>Location</span>
+          <p>Tirunelveli, Tamil Nadu, India</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    &copy; 2026 Murugan M. All rights reserved.
+  </footer>
+
+  <!-- 3D Scene Initialization -->
+  <script>
+    const canvas = document.getElementById('canvas3d');
+    const scene = new THREE.Scene();
+    
+    // Camera
+    const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+    camera.position.z = 25;
+
+    // Renderer
+    const renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+    // Ambient & Point Lighting
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
+    scene.add(ambientLight);
+
+    const pointLight = new THREE.PointLight(0x00f2fe, 2, 80);
+    pointLight.position.set(10, 15, 10);
+    scene.add(pointLight);
+
+    const purpleLight = new THREE.PointLight(0x9b51e0, 2, 80);
+    purpleLight.position.set(-15, -10, 10);
+    scene.add(purpleLight);
+
+    // 3D Objects Group
+    const group = new THREE.Group();
+    scene.add(group);
+
+    // Central Wireframe Icosahedron
+    const geoMain = new THREE.IcosahedronGeometry(7, 1);
+    const matWire = new THREE.MeshStandardMaterial({
+      color: 0x00f2fe,
+      wireframe: true,
+      transparent: true,
+      opacity: 0.35
+    });
+    const meshMain = new THREE.Mesh(geoMain, matWire);
+    meshMain.position.set(12, 0, -5);
+    group.add(meshMain);
+
+    // Floating Particles / Nodes
+    const particleGeo = new THREE.BufferGeometry();
+    const particleCount = 200;
+    const posArray = new Float32Array(particleCount * 3);
+
+    for (let i = 0; i < particleCount * 3; i++) {
+      posArray[i] = (Math.random() - 0.5) * 80;
+    }
+
+    particleGeo.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+    const particleMat = new THREE.PointsMaterial({
+      size: 0.18,
+      color: 0x9b51e0,
+      transparent: true,
+      opacity: 0.6
+    });
+
+    const particleSystem = new THREE.Points(particleGeo, particleMat);
+    scene.add(particleSystem);
+
+    // Floating Geometric Octahedrons
+    const octGeo = new THREE.OctahedronGeometry(1.2, 0);
+    const octMat = new THREE.MeshStandardMaterial({
+      color: 0x00f2fe,
+      roughness: 0.2,
+      metalness: 0.8
+    });
+
+    const floatingMeshes = [];
+    for (let i = 0; i < 6; i++) {
+      const oct = new THREE.Mesh(octGeo, octMat);
+      oct.position.set(
+        (Math.random() - 0.5) * 40,
+        (Math.random() - 0.5) * 40,
+        (Math.random() - 0.5) * 20
+      );
+      oct.rotation.set(Math.random() * 3, Math.random() * 3, 0);
+      floatingMeshes.push(oct);
+      scene.add(oct);
+    }
+
+    // Mouse Interaction
+    let mouseX = 0;
+    let mouseY = 0;
+    let targetX = 0;
+    let targetY = 0;
+
+    window.addEventListener('mousemove', (e) => {
+      mouseX = (e.clientX - window.innerWidth / 2) * 0.001;
+      mouseY = (e.clientY - window.innerHeight / 2) * 0.001;
+    });
+
+    // Resize Handling
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    // Scroll-based rotation
+    let scrollY = window.scrollY;
+    window.addEventListener('scroll', () => {
+      scrollY = window.scrollY;
+    });
+
+    // Animation Loop
+    const clock = new THREE.Clock();
+
+    function animate() {
+      requestAnimationFrame(animate);
+      const elapsedTime = clock.getElapsedTime();
+
+      // Smooth mouse follow
+      targetX = mouseX * 2;
+      targetY = mouseY * 2;
+      group.rotation.y += 0.05 * (targetX - group.rotation.y);
+      group.rotation.x += 0.05 * (targetY - group.rotation.x);
+
+      // Constant rotational movement
+      meshMain.rotation.x = elapsedTime * 0.15;
+      meshMain.rotation.y = elapsedTime * 0.2;
+
+      // Scroll reaction
+      meshMain.position.y = -scrollY * 0.01;
+
+      // Floating meshes idle motion
+      floatingMeshes.forEach((mesh, index) => {
+        mesh.rotation.x += 0.01;
+        mesh.rotation.y += 0.01;
+        mesh.position.y += Math.sin(elapsedTime + index) * 0.01;
+      });
+
+      // Background particle drift
+      particleSystem.rotation.y = -elapsedTime * 0.03;
+
+      renderer.render(scene, camera);
+    }
+
+    animate();
+  </script>
+</body>
+</html>
